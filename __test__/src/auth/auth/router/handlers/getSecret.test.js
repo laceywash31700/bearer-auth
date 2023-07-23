@@ -1,16 +1,15 @@
 'use strict';
 
-process.env.SECRET = "TEST_SECRET";
+process.env.SECRET = 'TEST_SECRET';
 
-const { handleSecret } = require('../../../router/handlers.js');
+const { handleSecret } = require('../../../../../../src/auth/router/handlers');
 
 describe('testing the users route handler', () => {
-
   const res = {
     send: jest.fn(() => res),
     status: jest.fn(() => res),
     json: jest.fn(() => res),
-  }
+  };
   const next = jest.fn();
 
   test('Should respond with a secret response', () => {

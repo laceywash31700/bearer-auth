@@ -1,10 +1,11 @@
 'use strict';
 
-const { users } = require('../auth/middleware/models/index.js');
+const { usersModel } = require('../models/index.js');
 
 async function handleSignup(req, res, next) {
   try {
-    let userRecord = await users.create(req.body);
+    let userRecord = await usersModel.create(req.body);
+    console.log('im in signup', userRecord);
     const output = {
       user: userRecord,
       token: userRecord.token,
@@ -16,12 +17,13 @@ async function handleSignup(req, res, next) {
   }
 }
 
-async function handleSignin(req, res, next) {
+async function handleSignIn(req, res, next) {
   try {
     const user = {
       user: req.user,
-      token: req.user.token,
+      token: req.usersModel.token,
     };
+    console.log(user);
     res.status(200).json(user);
   } catch (e) {
     console.error(e);
@@ -31,7 +33,7 @@ async function handleSignin(req, res, next) {
 
 async function handleGetUsers(req, res, next) {
   try {
-    const userRecords = await users.findAll({});
+    const userRecords = await usersModel.findAll({});
     const list = userRecords.map((user) => user.username);
     res.status(200).json(list);
   } catch (e) {
@@ -46,7 +48,7 @@ function handleSecret(req, res, next) {
 
 module.exports = {
   handleSignup,
-  handleSignin,
+  handleSignIn,
   handleGetUsers,
   handleSecret,
 };
