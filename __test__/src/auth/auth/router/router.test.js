@@ -1,10 +1,10 @@
 'use strict';
 
-process.env.SECRET = "TEST_SECRET";
-
-const { db } = require('../../models');
+process.env.SECRET = 'TEST_SECRET';
+const { db } = require('../../../../../src/auth/models/index.js');
 const supertest = require('supertest');
-const server = require('../../../server.js').server;
+
+const server = require('../../../../../src/server.js').server;
 
 const mockRequest = supertest(server);
 
@@ -21,9 +21,7 @@ afterAll(async () => {
 });
 
 describe('Auth Router', () => {
-
   it('Can create a new user', async () => {
-
     const response = await mockRequest.post('/signup').send(userData.testUser);
     const userObject = response.body;
 
@@ -33,11 +31,10 @@ describe('Auth Router', () => {
     expect(userObject.user.username).toEqual(userData.testUser.username);
   });
 
-  it('Can signin with basic auth string', async () => {
+  it('Can signIn with basic auth string', async () => {
     let { username, password } = userData.testUser;
 
-    const response = await mockRequest.post('/signin')
-      .auth(username, password);
+    const response = await mockRequest.post('/signIn').auth(username, password);
 
     const userObject = response.body;
     expect(response.status).toBe(200);
@@ -46,12 +43,11 @@ describe('Auth Router', () => {
     expect(userObject.user.username).toEqual(username);
   });
 
-  it('Can signin with bearer auth token', async () => {
+  it('Can signIn with bearer auth token', async () => {
     let { username, password } = userData.testUser;
 
     // First, use basic to login to get a token
-    const response = await mockRequest.post('/signin')
-      .auth(username, password);
+    const response = await mockRequest.post('/signIn').auth(username, password);
 
     accessToken = response.body.token;
 
@@ -65,45 +61,41 @@ describe('Auth Router', () => {
   });
 
   it('basic fails with known user and wrong password ', async () => {
-
-    const response = await mockRequest.post('/signin')
-      .auth('admin', 'xyz')
+    const response = await mockRequest.post('/signIn').auth('admin', 'xyz');
     const { user, token } = response.body;
 
     expect(response.status).toBe(403);
-    expect(response.text).toEqual("Invalid Login");
+    expect(response.text).toEqual('Invalid Login');
     expect(user).not.toBeDefined();
     expect(token).not.toBeDefined();
   });
 
   it('basic fails with unknown user', async () => {
-
-    const response = await mockRequest.post('/signin')
-      .auth('nobody', 'xyz')
+    const response = await mockRequest.post('/signin').auth('nobody', 'xyz');
     const { user, token } = response.body;
 
     expect(response.status).toBe(403);
-    expect(response.text).toEqual("Invalid Login");
+    expect(response.text).toEqual('Invalid Login');
     expect(user).not.toBeDefined();
     expect(token).not.toBeDefined();
   });
 
   it('bearer fails with an invalid token', async () => {
-
     // First, use basic to login to get a token
-    const response = await mockRequest.get('/users')
-      .set('Authorization', `Bearer foobar`)
+    const response = await mockRequest
+      .get('/users')
+      .set('Authorization', `Bearer foobar`);
     const userList = response.body;
 
     // Not checking the value of the response, only that we "got in"
     expect(response.status).toBe(403);
-    expect(response.text).toEqual("Invalid Login");
+    expect(response.text).toEqual('Invalid Login');
     expect(userList.length).toBeFalsy();
   });
 
   it('Succeeds with a valid token', async () => {
-
-    const response = await mockRequest.get('/users')
+    const response = await mockRequest
+      .get('/users')
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(200);
@@ -112,10 +104,11 @@ describe('Auth Router', () => {
   });
 
   it('Secret Route fails with invalid token', async () => {
-    const response = await mockRequest.get('/secret')
+    const response = await mockRequest
+      .get('/secret')
       .set('Authorization', `bearer accessgranted`);
 
     expect(response.status).toBe(403);
-    expect(response.text).toEqual("Invalid Login");
+    expect(response.text).toEqual('Invalid Login');
   });
 });

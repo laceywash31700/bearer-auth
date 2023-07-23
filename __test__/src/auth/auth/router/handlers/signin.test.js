@@ -1,9 +1,9 @@
 'use strict';
 
-process.env.SECRET = "TEST_SECRET";
+process.env.SECRET = 'TEST_SECRET';
 
-const { db, users } = require('../../../models');
-const { handleSignin } = require('../../../router/handlers.js');
+const { db, users } = require('../../../../../../src/auth/models/index.js');
+const { handleSignIn } = require('../../../../../../src/auth/router/handlers.js');
 
 beforeAll(async () => {
   await db.sync();
@@ -13,8 +13,7 @@ afterAll(async () => {
   await db.drop();
 });
 
-describe('Testing the signin handler', () => {
-
+describe('Testing the signIn handler', () => {
   const res = {
     send: jest.fn(() => res),
     status: jest.fn(() => res),
@@ -25,9 +24,9 @@ describe('Testing the signin handler', () => {
   test('Should find a User when a `user` is present on the request', async () => {
     let req = {
       user: await users.findOne({ where: { username: 'test' } }),
-    }
+    };
 
-    await handleSignin(req, res, next);
+    await handleSignIn(req, res, next);
     expect(res.status).toHaveBeenCalledWith(200);
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -45,7 +44,7 @@ describe('Testing the signin handler', () => {
     let req = {};
     jest.clearAllMocks();
 
-    await handleSignin(req, res, next);
+    await handleSignIn(req, res, next);
     expect(res.status).not.toHaveBeenCalled();
     expect(res.send).not.toHaveBeenCalled();
     expect(res.json).not.toHaveBeenCalled();

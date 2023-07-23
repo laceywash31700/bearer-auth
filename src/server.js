@@ -6,9 +6,9 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 // Esoteric Resources
+const authRoutes = require('../src/auth/router/index');
 const errorHandler = require('./error-handlers/500');
 const notFound = require('./error-handlers/404');
-const authRoutes = require('./auth/router/index.js');
 
 // Prepare the express app
 const app = express();
