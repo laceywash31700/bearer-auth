@@ -2,12 +2,12 @@
 
 process.env.SECRET = 'TEST_SECRET';
 
-const { db, users } = require('../../../../../../src/auth/models/index.js');
+const { db, usersModel } = require('../../../../../../src/auth/models/index.js');
 const { handleSignIn } = require('../../../../../../src/auth/router/handlers.js');
 
 beforeAll(async () => {
   await db.sync();
-  await users.create({ username: 'test', password: 'test' });
+  await usersModel.create({ username: 'test', password: 'test' });
 });
 afterAll(async () => {
   await db.drop();
@@ -23,7 +23,7 @@ describe('Testing the signIn handler', () => {
 
   test('Should find a User when a `user` is present on the request', async () => {
     let req = {
-      user: await users.findOne({ where: { username: 'test' } }),
+      user: await usersModel.findOne({ where: { username: 'test' } }),
     };
 
     await handleSignIn(req, res, next);

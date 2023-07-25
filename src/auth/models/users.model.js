@@ -1,6 +1,7 @@
 'use strict';
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
+const SECRET = process.env.SECRET;
 
 const userSchema = (sequelize, DataTypes) => {
   const model = sequelize.define('User', {
@@ -9,31 +10,42 @@ const userSchema = (sequelize, DataTypes) => {
     token: {
       type: DataTypes.VIRTUAL,
       get() {
-        return jwt.sign({ username: this.username });
+        return jwt.sign({ username: this.username }, SECRET);
       },
     },
   });
 
   model.beforeCreate(async (user) => {
-    let hashedPass = await bcrypt.hash(user.password, 10);
-    user.password = hashedPass;
+    try {
+      let hashedPass = await bcrypt.hash(user.password, 10);
+      user.password = hashedPass;
+    } catch (e) {
+      console.error(e);
+    }
   });
 
   // Basic AUTH: Validating strings (username, password)
   model.authenticateBasic = async function (username, password) {
-    const user = await this.findOne({ username });
-    const valid = await bcrypt.compare(password, user.password);
-    if (valid) {
-      return user;
+    // console.log(`I am in authenticate Basic`,username,password);
+    try {
+      const user = await this.findOne({ where: { username } });
+      // console.log(`hey i am inside of this model`, user);
+      const valid = await bcrypt.compare(password, user.password);
+      if (valid) {
+        return user;
+      }
+      throw new Error(`user not found`);
+    } catch (e) {
+      throw new Error('Invalid User');
     }
-    throw new Error('Invalid User');
   };
 
   // Bearer AUTH: Validating a token
   model.authenticateToken = async function (token) {
+    console.log(`I am in the auth token method`,token);
     try {
-      const parsedToken = jwt.verify(token, process.env.SECRET);
-      const user = this.findOne({ username: parsedToken.username });
+      const parsedToken = jwt.verify(token, SECRET);
+      const user = await this.findOne({ username: parsedToken.username });
       if (user) {
         return user;
       }

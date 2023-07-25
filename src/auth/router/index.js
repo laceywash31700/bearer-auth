@@ -12,7 +12,7 @@ const {
 const authRouter = express.Router();
 
 authRouter.post('/signup', handleSignup);
-authRouter.post('/signIn', basicAuth, handleSignIn);
+authRouter.post('/signin', basicAuth, handleSignIn);
 authRouter.get('/users', bearerAuth, handleGetUsers);
 authRouter.get('/secret', bearerAuth, handleSecret);
 
