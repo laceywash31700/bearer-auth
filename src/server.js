@@ -6,7 +6,8 @@ const cors = require('cors');
 const morgan = require('morgan');
 
 // Esoteric Resources
-const authRoutes = require('../src/auth/router/index');
+const authRoutes = require('./auth/router/index.router');
+const listRoutes = require('./auth/router/item.router');
 const errorHandler = require('./error-handlers/500');
 const notFound = require('./error-handlers/404');
 
@@ -22,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 
 // Routes
 app.use(authRoutes);
+app.use(listRoutes);
 
 // Catchalls
 app.use(notFound);

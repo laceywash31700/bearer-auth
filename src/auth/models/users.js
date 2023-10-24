@@ -4,12 +4,30 @@ const bcrypt = require('bcrypt');
 
 const userSchema = (sequelize, DataTypes) => {
   const model = sequelize.define('User', {
-    username: { type: DataTypes.STRING, allowNull: false, unique: true },
+    username: { type: DataTypes.STRING, allowNull: false },
     password: { type: DataTypes.STRING, allowNull: false },
+    role: {
+      type: DataTypes.ENUM('user', 'writer', 'editor', 'admin'),
+      defautValue: 'user',
+    },
     token: {
       type: DataTypes.VIRTUAL,
       get() {
-        return jwt.sign({ username: this.username });
+        return jwt.sign({ username: this.username }, process.env.SECRET, {
+          expiresIn: 1000 * 60 * 60 * 24,
+        });
+      },
+    },
+    capabilities: {
+      type: DataTypes.VIRTUAL,
+      get() {
+        const acl = {
+          user: ['read'],
+          writer: ['read', 'create'],
+          editor: ['read', 'create', 'update'],
+          admin: ['read', 'create', 'update', 'delete'],
+        };
+        return acl[this.role];
       },
     },
   });
@@ -25,19 +43,21 @@ const userSchema = (sequelize, DataTypes) => {
     const valid = await bcrypt.compare(password, user.password);
     if (valid) {
       return user;
+    } else {
+      throw new Error('Invalid User');
     }
-    throw new Error('Invalid User');
   };
 
   // Bearer AUTH: Validating a token
   model.authenticateToken = async function (token) {
     try {
       const parsedToken = jwt.verify(token, process.env.SECRET);
-      const user = this.findOne({ username: parsedToken.username });
+      const user = this.findOne({ where: { username: parsedToken.username } });
       if (user) {
         return user;
+      } else {
+        throw new Error('User Not Found');
       }
-      throw new Error('User Not Found');
     } catch (e) {
       throw new Error(e.message);
     }
