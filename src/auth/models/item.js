@@ -1,7 +1,7 @@
 'use strict';
 
-const item = (sequalizeInstance, DataTypes) =>
-  sequalizeInstance.define('todos', {
+const item = (sequelize, DataTypes) => {
+  const Item = sequelize.define('Item', {
     text: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -19,5 +19,8 @@ const item = (sequalizeInstance, DataTypes) =>
       allowNull: false,
     },
   });
+
+  return Item;
+};
 
 module.exports = item;

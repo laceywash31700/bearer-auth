@@ -18,13 +18,19 @@ class Collection {
     }
   }
   
-  async read(id, options = {}) {
+  async read(idOrUsername, options = {}) {
     let records = null; 
     try {
-      if (id) {
-        options.where = { id: id };
+      if (idOrUsername) {
+        if (typeof idOrUsername === 'number') {
+          options.where = { id: idOrUsername };
+        } else {
+          options.where = { username: idOrUsername };
+        }
         records = await this.model.findOne(options);
-      } else records = await this.model.findAll(options);
+      } else {
+        records = await this.model.findAll(options);
+      }
       return records;
     } catch (e) {
       console.error(`error when reading data for model: ${this.model.name}`);
@@ -44,7 +50,6 @@ class Collection {
       return e;
     }
   }
-
 
   async delete(id) {
     try {

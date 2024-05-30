@@ -6,7 +6,7 @@ const { startup } = require('./src/server');
 const Port = process.env.PORT || 3002;
 
 // Start up DB Server
-db.sync()
+db.sync({})
   .then(() => {
     // Start the web servercd c 
     startup(Port);

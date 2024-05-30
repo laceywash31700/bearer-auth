@@ -2,16 +2,23 @@
 
 const { Sequelize, DataTypes } = require('sequelize');
 const userSchema = require('./users.js');
-const item = require('./item.js');
+const itemSchema = require('./item.js');
+const userItemsSchema = require('./userItems.js');
 const Collection = require('./collection.js');
 
-const DATABASE_URI= process.env.NODE_ENV === 'test' ? 'sqlite::memory' : process.env.DATABASE_URL;
-// const DATABASE_CONFIG = process.env.NODE_ENV === 'production' ? { dialectOptions: {} } : {};
+const DATABASE_URI = process.env.NODE_ENV === 'test' ? 'sqlite::memory:' : process.env.DATABASE_URL;
+const DATABASE_CONFIG = process.env.NODE_ENV === 'production' ? { dialectOptions: {} } : {};
 
-const db = new Sequelize(DATABASE_URI);
-const usersModel = userSchema(db, DataTypes);
-const itemModel = item(db, DataTypes);
-const itemCollection = new Collection(itemModel);
+const db = new Sequelize(DATABASE_URI, DATABASE_CONFIG);
 
+const User = userSchema(db, DataTypes);
+const Item = itemSchema(db, DataTypes);
+const UserItems = userItemsSchema(db, DataTypes);
 
-module.exports = {db, usersModel, itemCollection};
+User.belongsToMany(Item, { through: UserItems });
+Item.belongsToMany(User, { through: UserItems });
+
+const userCollection = new Collection(User);
+const itemCollection = new Collection(Item);
+
+module.exports = { db, userCollection, itemCollection };

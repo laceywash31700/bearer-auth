@@ -8,16 +8,18 @@ const userSchema = (sequelize, DataTypes) => {
     password: { type: DataTypes.STRING, allowNull: false },
     role: {
       type: DataTypes.ENUM('user', 'writer', 'editor', 'admin'),
-      defautValue: 'user',
+      defaultValue: 'user',
     },
+
     token: {
       type: DataTypes.VIRTUAL,
       get() {
         return jwt.sign({ username: this.username }, process.env.SECRET, {
-          expiresIn: 1000 * 60 * 60 * 24,
+        expiresIn: '1d',
         });
       },
     },
+    
     capabilities: {
       type: DataTypes.VIRTUAL,
       get() {
@@ -37,9 +39,11 @@ const userSchema = (sequelize, DataTypes) => {
     user.password = hashedPass;
   });
 
+
   // Basic AUTH: Validating strings (username, password)
   model.authenticateBasic = async function (username, password) {
-    const user = await this.findOne({ username });
+    const user = await this.findOne({username: username });
+    // console.log("this is the user",user);
     const valid = await bcrypt.compare(password, user.password);
     if (valid) {
       return user;
@@ -49,9 +53,9 @@ const userSchema = (sequelize, DataTypes) => {
   };
 
   // Bearer AUTH: Validating a token
-  model.authenticateToken = async function (token) {
+  model.authenticateToken = async function (payload) {
     try {
-      const parsedToken = jwt.verify(token, process.env.SECRET);
+      const parsedToken = jwt.verify(payload, process.env.SECRET);
       const user = this.findOne({ where: { username: parsedToken.username } });
       if (user) {
         return user;
