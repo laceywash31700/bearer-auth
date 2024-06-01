@@ -1,9 +1,6 @@
 'use strict';
 
-// collection interface - provide abstraction for our CRUD behaviors regardless of our model
-
 class Collection {
-  
   constructor(model) {
     this.model = model;
   }
@@ -17,27 +14,33 @@ class Collection {
       return e;
     }
   }
-  
+
   async read(idOrUsername, options = {}) {
-    let records = null; 
+    let records = null;
     try {
-      if (idOrUsername) {
-        if (typeof idOrUsername === 'number') {
-          options.where = { id: idOrUsername };
-        } else {
-          options.where = { username: idOrUsername };
-        }
-        records = await this.model.findOne(options);
-      } else {
-        records = await this.model.findAll(options);
+      if (!idOrUsername) {
+        throw new Error('idOrUsername is required');
       }
+  
+      const queryOptions = { ...options };
+      
+      if (typeof idOrUsername === 'number') {
+        queryOptions.where = { id: idOrUsername };
+      } else if (typeof idOrUsername === 'string') {
+        queryOptions.where = { username: idOrUsername };
+      } else {
+        throw new Error('idOrUsername must be a number or a string');
+      }
+  
+      records = await this.model.findOne(queryOptions);
       return records;
     } catch (e) {
-      console.error(`error when reading data for model: ${this.model.name}`);
-      return e;
+      console.error(`Error when reading data for model: ${this.model.name}`, e);
+      return null;
     }
   }
   
+
   async update(id, jsonObj) {
     try {
       if (!id)

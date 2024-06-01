@@ -21,4 +21,4 @@ Item.belongsToMany(User, { through: UserItems });
 const userCollection = new Collection(User);
 const itemCollection = new Collection(Item);
 
-module.exports = { db, userCollection, itemCollection };
+module.exports = { db, userCollection, itemCollection, User };

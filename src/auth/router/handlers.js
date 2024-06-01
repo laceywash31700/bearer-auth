@@ -15,17 +15,15 @@ async function handleSignup(req, res, next) {
 async function handleSignIn(req, res, next) {
   try {
     // Generate a token for the signed in user
-    userCollection.read
-
-    const token = jwt.sign({ username: req.user.username }, process.env.SECRET, {
-      expiresIn: '1d', // Expires in 24 hours
-    });
-
-    const user = {
-      user: req.user,
-      token: token,
-    };
-    res.status(200).json(user);
+    const token = jwt.sign(
+      { username: req.user.username, capabilities: req.user.role },
+      process.env.SECRET,
+      {
+        expiresIn: '1d', // Expires in 24 hours
+      }
+    );
+    req.user.token = token;
+    res.status(200).json(req.user);
   } catch (e) {
     console.error(e);
     next(e);

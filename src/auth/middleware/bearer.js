@@ -10,7 +10,7 @@ module.exports = async (req, res, next) => {
     const [authType, token] = req.headers.authorization.split(' ');
     if (authType === 'Bearer') {
       const validUser = await  usersModel.authenticateToken(token);
-
+      console.log("this is the valid user", validUser);
       if (validUser) {
         req.user = validUser;
         next();
@@ -18,7 +18,7 @@ module.exports = async (req, res, next) => {
         next('No User Found Please Sign Up');
       }
     } else {
-      next('Not Authorized, no token avalible');
+      next('Not Authorized, no token available');
     }
   } catch (e) {
     console.error(e);

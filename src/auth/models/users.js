@@ -4,30 +4,30 @@ const bcrypt = require('bcrypt');
 
 const userSchema = (sequelize, DataTypes) => {
   const model = sequelize.define('User', {
-    username: { type: DataTypes.STRING, allowNull: false },
+    username: { type: DataTypes.STRING, allowNull: false, unique: true },
     password: { type: DataTypes.STRING, allowNull: false },
     role: {
-      type: DataTypes.ENUM('user', 'writer', 'editor', 'admin'),
-      defaultValue: 'user',
+      type: DataTypes.ENUM('User', 'Writer', 'Editor', 'Administrator'),
+      defaultValue: 'User',
     },
-
     token: {
       type: DataTypes.VIRTUAL,
       get() {
-        return jwt.sign({ username: this.username }, process.env.SECRET, {
-        expiresIn: '1d',
-        });
+        return jwt.sign(
+          { username: this.username, capabilities: this.role },
+          process.env.SECRET,
+          { expiresIn: '1d' }
+        );
       },
     },
-    
     capabilities: {
       type: DataTypes.VIRTUAL,
       get() {
         const acl = {
-          user: ['read'],
-          writer: ['read', 'create'],
-          editor: ['read', 'create', 'update'],
-          admin: ['read', 'create', 'update', 'delete'],
+          User: ['read'],
+          Writer: ['read', 'create'],
+          Editor: ['read', 'create', 'update'],
+          Administrator: ['read', 'create', 'update', 'delete'],
         };
         return acl[this.role];
       },
@@ -39,29 +39,27 @@ const userSchema = (sequelize, DataTypes) => {
     user.password = hashedPass;
   });
 
-
   // Basic AUTH: Validating strings (username, password)
   model.authenticateBasic = async function (username, password) {
-    const user = await this.findOne({username: username });
-    // console.log("this is the user",user);
-    const valid = await bcrypt.compare(password, user.password);
-    if (valid) {
-      return user;
-    } else {
-      throw new Error('Invalid User');
+    const user = await this.findOne({ where: { username: username } });
+    if (user) {
+      const valid = await bcrypt.compare(password, user.password);
+      if (valid) {
+        return user;
+      }
     }
+    throw new Error('Invalid User');
   };
 
   // Bearer AUTH: Validating a token
-  model.authenticateToken = async function (payload) {
+  model.authenticateToken = async function (token) {
     try {
-      const parsedToken = jwt.verify(payload, process.env.SECRET);
-      const user = this.findOne({ where: { username: parsedToken.username } });
+      const parsedToken = jwt.verify(token, process.env.SECRET);
+      const user = await this.findOne({ where: { username: parsedToken.username } });
       if (user) {
         return user;
-      } else {
-        throw new Error('User Not Found');
       }
+      throw new Error('User Not Found');
     } catch (e) {
       throw new Error(e.message);
     }
